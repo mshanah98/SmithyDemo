@@ -28,31 +28,47 @@ jobs:
         working-directory: build/smithyprojections/SmithyDemo/typescript/typescript-codegen
         run: yarn install --frozen-lockfile
 
+      # Add a timestamp to the version to avoid conflicts
+      - name: Update package version with timestamp
+        working-directory: build/smithyprojections/SmithyDemo/typescript/typescript-codegen
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          TIMESTAMP=$(date +%Y%m%d%H%M%S)
+          NEW_VERSION="${VERSION}-${TIMESTAMP}"
+          sed -i "s/\"version\": \"${VERSION}\"/\"version\": \"${NEW_VERSION}\"/" package.json
+          echo "Updated version to ${NEW_VERSION}"
+
       - name: Publish to GitHub Packages
         working-directory: build/smithyprojections/SmithyDemo/typescript/typescript-codegen
         run: npm publish --access=restricted --registry=https://npm.pkg.github.com
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # New steps to publish OpenAPI as Maven artifact
+      # Publish OpenAPI spec as Maven artifact
       - name: Create OpenAPI JAR
         run: |
           mkdir -p META-INF/openapi
-          cp -r build/smithyprojections/openapi/openapi/* META-INF/openapi/
+          cp -r build/smithyprojections/SmithyDemo/openapi/* META-INF/openapi/
           jar cf openapi-spec.jar META-INF
 
       - name: Publish OpenAPI to GitHub Packages
         run: |
-          # Set up Maven settings with GitHub credentials
-          mkdir -p ~/.m2
-          echo "<settings><servers><server><id>github</id><username>${GITHUB_ACTOR}</username><password>${GITHUB_TOKEN}</password></server></servers></settings>" > ~/.m2/settings.xml
+          # Create simple pom.xml file for the artifact
+          cat > pom.xml << EOL
+          <?xml version="1.0" encoding="UTF-8"?>
+          <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+              <modelVersion>4.0.0</modelVersion>
+              <groupId>com.mshanah98</groupId>
+              <artifactId>demo-service-openapi</artifactId>
+              <version>1.0.0-$(date +%Y%m%d%H%M%S)</version>
+              <packaging>jar</packaging>
+          </project>
+          EOL
           
-          # Deploy the JAR to GitHub Packages
+          # Deploy to GitHub Packages
           mvn deploy:deploy-file \
-            -DgroupId=com.mshanah98 \
-            -DartifactId=demo-service-openapi \
-            -Dversion=1.0.0-$(date +%Y%m%d%H%M%S) \
-            -Dpackaging=jar \
+            -DpomFile=pom.xml \
             -Dfile=openapi-spec.jar \
             -DrepositoryId=github \
             -Durl=https://maven.pkg.github.com/${{ github.repository }}
