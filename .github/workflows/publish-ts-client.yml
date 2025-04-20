@@ -51,9 +51,9 @@ jobs:
           cp -r build/smithyprojections/SmithyDemo/openapi/* META-INF/openapi/
           jar cf openapi-spec.jar META-INF
 
-      - name: Publish OpenAPI to GitHub Packages
+      - name: Create POM file
         run: |
-          # Create simple pom.xml file for the artifact
+          TIMESTAMP=$(date +%Y%m%d%H%M%S)
           cat > pom.xml << EOL
           <?xml version="1.0" encoding="UTF-8"?>
           <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -61,16 +61,14 @@ jobs:
               <modelVersion>4.0.0</modelVersion>
               <groupId>com.mshanah98</groupId>
               <artifactId>demo-service-openapi</artifactId>
-              <version>1.0.0-$(date +%Y%m%d%H%M%S)</version>
+              <version>1.0.0-${TIMESTAMP}</version>
               <packaging>jar</packaging>
+              <name>Smithy DemoService OpenAPI Specification</name>
+              <description>OpenAPI specification generated from Smithy model</description>
           </project>
           EOL
-          
-          # Deploy to GitHub Packages
-          mvn deploy:deploy-file \
-            -DpomFile=pom.xml \
-            -Dfile=openapi-spec.jar \
-            -DrepositoryId=github \
-            -Durl=https://maven.pkg.github.com/${{ github.repository }}
+
+      - name: Publish OpenAPI to GitHub Packages
+        run: mvn deploy:deploy-file -DpomFile=pom.xml -Dfile=openapi-spec.jar -DrepositoryId=github -Durl=https://maven.pkg.github.com/${{ github.repository }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
