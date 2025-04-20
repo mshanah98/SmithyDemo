@@ -40,10 +40,7 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # Step 5: Publish OpenAPI Spec to GitHub Packages
-      - name: Publish OpenAPI Spec to GitHub Packages
-        run: |
-          curl -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-            -H "Accept: application/vnd.github.v3+json" \
-            -X POST \
-            -F "file=@build/smithyprojections/SmithyDemo/openapi/openapi.yaml" \
-            "https://uploads.github.com/repos/${{ github.repository }}/releases/assets?name=openapi.yaml"
+      - name: Publish OpenAPI JAR to GitHub Packages
+        run: ./gradlew openApiJar publish
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
