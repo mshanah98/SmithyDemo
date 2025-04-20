@@ -5,7 +5,7 @@
       "plugins": {
         "typescript-codegen": {
           "service": "demo#DemoService",
-          "package": "@mshanah/demo-service",
+          "package": "@mshanah98/demo-service",
           "packageVersion": "1.0.0",
           "target": "./build/sdk/ts-client"
         }
