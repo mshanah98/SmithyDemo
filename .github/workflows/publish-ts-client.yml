@@ -22,7 +22,7 @@ jobs:
         run: ./gradlew smithyBuild
 
       - name: Publish to GitHub Packages
-        working-directory: build/smithyprojections/SmithyDemo/Typescript/typescript-codegen
+        working-directory: build/smithyprojections/SmithyDemo/typescript/typescript-codegen
         run: |
           npm version patch
           npm publish --access=restricted
