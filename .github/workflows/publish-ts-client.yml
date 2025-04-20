@@ -28,9 +28,15 @@ jobs:
         working-directory: build/smithyprojections/SmithyDemo/typescript/typescript-codegen
         run: yarn install --frozen-lockfile
 
+      # Automatically bump the version before publishing
+      - name: Bump version
+        run: |
+          npm version patch -m "Upgrade to %s for reasons"
+          git push --follow-tags
+
       - name: Publish to GitHub Packages
         working-directory: build/smithyprojections/SmithyDemo/typescript/typescript-codegen
-        run: npm publish --access=restricted --registry=https://npm.pkg.github.com --force
+        run: npm publish --access=restricted --registry=https://npm.pkg.github.com
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
