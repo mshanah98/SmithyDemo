@@ -30,7 +30,7 @@ jobs:
 
       - name: Publish to GitHub Packages
         working-directory: build/smithyprojections/SmithyDemo/typescript/typescript-codegen
-        run: npm publish --access=restricted --registry=https://npm.pkg.github.com
+        run: npm publish --access=restricted --registry=https://npm.pkg.github.com --force
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
