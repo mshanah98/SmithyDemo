@@ -21,6 +21,10 @@ jobs:
       - name: Build Smithy client
         run: ./gradlew smithyBuild
 
+      - name: Install dependencies for SDK
+        working-directory: build/smithyprojections/SmithyDemo/typescript/typescript-codegen
+        run: yarn install --frozen-lockfile
+
       - name: Publish to GitHub Packages
         working-directory: build/smithyprojections/SmithyDemo/typescript/typescript-codegen
         run: |
