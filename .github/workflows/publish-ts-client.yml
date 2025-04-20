@@ -29,9 +29,11 @@ jobs:
         run: yarn install --frozen-lockfile
 
       # Automatically bump the version before publishing
-      - name: Bump version
+      - name: Bump npm version based on run number
         working-directory: build/smithyprojections/SmithyDemo/typescript/typescript-codegen
-        run: npm version patch --no-git-tag-version
+        run: |
+          VERSION="1.0.${{ github.run_number }}"
+          npm version "$VERSION" --no-git-tag-version
 
       - name: Publish to GitHub Packages
         working-directory: build/smithyprojections/SmithyDemo/typescript/typescript-codegen
