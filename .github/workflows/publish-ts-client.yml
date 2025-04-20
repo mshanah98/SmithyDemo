@@ -28,47 +28,17 @@ jobs:
         working-directory: build/smithyprojections/SmithyDemo/typescript/typescript-codegen
         run: yarn install --frozen-lockfile
 
-      # Add a timestamp to the version to avoid conflicts
-      - name: Update package version with timestamp
-        working-directory: build/smithyprojections/SmithyDemo/typescript/typescript-codegen
-        run: |
-          VERSION=$(node -p "require('./package.json').version")
-          TIMESTAMP=$(date +%Y%m%d%H%M%S)
-          NEW_VERSION="${VERSION}-${TIMESTAMP}"
-          sed -i "s/\"version\": \"${VERSION}\"/\"version\": \"${NEW_VERSION}\"/" package.json
-          echo "Updated version to ${NEW_VERSION}"
-
       - name: Publish to GitHub Packages
         working-directory: build/smithyprojections/SmithyDemo/typescript/typescript-codegen
         run: npm publish --access=restricted --registry=https://npm.pkg.github.com
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # Publish OpenAPI spec as Maven artifact
-      - name: Create OpenAPI JAR
+      # Step 5: Publish OpenAPI Spec to GitHub Packages
+      - name: Publish OpenAPI Spec to GitHub Packages
         run: |
-          mkdir -p META-INF/openapi
-          cp -r build/smithyprojections/SmithyDemo/openapi/* META-INF/openapi/
-          jar cf openapi-spec.jar META-INF
-
-      - name: Create POM file
-        run: |
-          TIMESTAMP=$(date +%Y%m%d%H%M%S)
-          cat > pom.xml << EOL
-          <?xml version="1.0" encoding="UTF-8"?>
-          <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-              <modelVersion>4.0.0</modelVersion>
-              <groupId>com.mshanah98</groupId>
-              <artifactId>demo-service-openapi</artifactId>
-              <version>1.0.0-${TIMESTAMP}</version>
-              <packaging>jar</packaging>
-              <name>Smithy DemoService OpenAPI Specification</name>
-              <description>OpenAPI specification generated from Smithy model</description>
-          </project>
-          EOL
-
-      - name: Publish OpenAPI to GitHub Packages
-        run: mvn deploy:deploy-file -DpomFile=pom.xml -Dfile=openapi-spec.jar -DrepositoryId=github -Durl=https://maven.pkg.github.com/${{ github.repository }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          curl -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            -X POST \
+            -F "file=@build/smithyprojections/SmithyDemo/openapi/openapi.yaml" \
+            "https://uploads.github.com/repos/${{ github.repository }}/releases/assets?name=openapi.yaml"
