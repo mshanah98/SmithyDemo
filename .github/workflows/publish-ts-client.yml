@@ -33,3 +33,28 @@ jobs:
         run: npm publish --access=restricted --registry=https://npm.pkg.github.com
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # New steps to publish OpenAPI as Maven artifact
+      - name: Create OpenAPI JAR
+        run: |
+          mkdir -p META-INF/openapi
+          cp -r build/smithyprojections/openapi/openapi/* META-INF/openapi/
+          jar cf openapi-spec.jar META-INF
+
+      - name: Publish OpenAPI to GitHub Packages
+        run: |
+          # Set up Maven settings with GitHub credentials
+          mkdir -p ~/.m2
+          echo "<settings><servers><server><id>github</id><username>${GITHUB_ACTOR}</username><password>${GITHUB_TOKEN}</password></server></servers></settings>" > ~/.m2/settings.xml
+          
+          # Deploy the JAR to GitHub Packages
+          mvn deploy:deploy-file \
+            -DgroupId=com.mshanah98 \
+            -DartifactId=demo-service-openapi \
+            -Dversion=1.0.0-$(date +%Y%m%d%H%M%S) \
+            -Dpackaging=jar \
+            -Dfile=openapi-spec.jar \
+            -DrepositoryId=github \
+            -Durl=https://maven.pkg.github.com/${{ github.repository }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
