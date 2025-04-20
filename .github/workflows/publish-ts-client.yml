@@ -1,0 +1,30 @@
+name: Publish Smithy Client to GitHub Packages
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: https://npm.pkg.github.com/
+          scope: "@mshanah98"
+
+      - name: Build Smithy client
+        run: ./gradlew smithyBuild
+
+      - name: Publish to GitHub Packages
+        working-directory: build/smithyprojections/SmithyDemo/Typescript/typescript-codegen
+        run: |
+          npm version patch
+          npm publish --access=restricted
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
